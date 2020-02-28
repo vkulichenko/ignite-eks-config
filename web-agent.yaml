@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-agent
+  template:
+    metadata:
+      labels:
+        app: web-agent
+    spec:
+      containers:
+      - name: web-console
+        image: gridgain/gridgain-web-agent:2020.01.01
+        env:
+        - name: NODE_URI
+          value: "http://ade7e649458c711ea814512313613076-1260354726.us-east-1.elb.amazonaws.com:8080/"
+        - name: SERVER_URI
+          value: "http://console.gridgain.com/"
+        - name: TOKENS
+          value: "0mxbHU6Tj4pMsENe6vkW"

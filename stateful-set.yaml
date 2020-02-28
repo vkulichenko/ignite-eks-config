@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ignite-cluster
+  namespace: ignite
+spec:
+  replicas: 2
+  serviceName: ignite-service
+  selector:
+    matchLabels:
+      app: ignite
+  template:
+    metadata:
+      labels:
+        app: ignite
+    spec:
+      serviceAccountName: ignite
+      containers:
+      - name: ignite-node
+        image: gridgain/community:8.7.12
+        env:
+        - name: OPTION_LIBS
+          value: ignite-kubernetes,ignite-rest-http
+        - name: CONFIG_URI
+          value: file:///ignite/config/node-configuration.xml
+        - name: JVM_OPTS
+          value: "-DIGNITE_WAL_MMAP=false"
+        ports:
+        - containerPort: 47100 # communication SPI port
+        - containerPort: 47500 # discovery SPI port
+        - containerPort: 49112 # JMX port
+        - containerPort: 10800 # thin clients/JDBC driver port
+        - containerPort: 8080 # REST API
+        volumeMounts:
+        - mountPath: /ignite/config
+          name: config-vol
+        - mountPath: /ignite/work
+          name: work-vol
+        - mountPath: /ignite/wal
+          name: wal-vol
+        - mountPath: /ignite/walarchive
+          name: walarchive-vol
+      securityContext:
+        fsGroup: 2000
+      volumes:
+      - name: config-vol
+        configMap:
+          name: ignite-config
+  volumeClaimTemplates:
+  - metadata:
+      name: work-vol
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: "1Gi"
+  - metadata:
+      name: wal-vol
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: "1Gi"
+  - metadata:
+      name: walarchive-vol
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: "1Gi"
